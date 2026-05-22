@@ -18,11 +18,12 @@ const program = new Command()
 
 const cliOpts = program.opts();
 
-const config = loadConfig({
-  provider: cliOpts.provider,
-  model: cliOpts.model,
-  apiKey: cliOpts.apiKey,
-});
+const overrides: Record<string, string> = {};
+if (cliOpts.provider) overrides.provider = cliOpts.provider;
+if (cliOpts.model) overrides.model = cliOpts.model;
+if (cliOpts.apiKey) overrides.apiKey = cliOpts.apiKey;
+
+const config = loadConfig(overrides);
 
 const provider = createProvider(config);
 

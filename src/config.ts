@@ -1,5 +1,8 @@
+import { config } from "dotenv";
 import { z } from "zod";
 import type { Config } from "./types.js";
+
+config();
 
 const ConfigSchema = z.object({
   provider: z.enum(["openai", "anthropic", "deepseek", "mock"]).default("mock"),
