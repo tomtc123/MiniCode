@@ -1,0 +1,170 @@
+import { useState, useCallback } from "react";
+import { Box, Text } from "ink";
+import type { LLMMessage, ToolCall } from "../types.js";
+import type { LLMProvider } from "../llm/provider.js";
+import type { ToolRegistry } from "../tools/registry.js";
+import { MessageList } from "./message-list.js";
+import { UserInput } from "./input.js";
+import { Welcome } from "./welcome.js";
+import { SLASH_COMMANDS } from "./slash-menu.js";
+import type { Config } from "../types.js";
+
+interface REPLProps {
+  provider: LLMProvider;
+  toolRegistry: ToolRegistry;
+  systemPrompt: string;
+  config: Config;
+}
+
+function resolveAlias(input: string): string {
+  const cmd = SLASH_COMMANDS.find(
+    (c) => c.name === input || c.alias === input
+  );
+  return cmd?.name ?? input;
+}
+
+export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps) {
+  const [messages, setMessages] = useState<LLMMessage[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
+  const [toolResults, setToolResults] = useState<
+    Map<string, { output: string; isError?: boolean }>
+  >(new Map());
+
+  const addSystemMessage = useCallback((text: string) => {
+    setMessages((prev) => [...prev, { role: "assistant", content: text }]);
+  }, []);
+
+  const sendMessage = useCallback(
+    async (userText: string) => {
+      const resolved = resolveAlias(userText);
+
+      // Handle slash commands locally
+      if (resolved === "/help" || resolved === "/h") {
+        const help = SLASH_COMMANDS
+          .map((c) => `  ${c.name.padEnd(12)} ${c.description}${c.alias ? ` (${c.alias})` : ""}`)
+          .join("\n");
+        addSystemMessage(`**Available Commands:**\n${help}`);
+        return;
+      }
+      if (resolved === "/clear" || resolved === "/c") {
+        setMessages([]);
+        setToolResults(new Map());
+        return;
+      }
+      if (resolved === "/tools" || resolved === "/t") {
+        const tools = toolRegistry.getDefinitions();
+        const list = tools
+          .map((t) => `  ${t.name.padEnd(14)} ${t.description}`)
+          .join("\n");
+        addSystemMessage(`**Available Tools:**\n${list}`);
+        return;
+      }
+      if (resolved === "/provider" || resolved === "/p") {
+        addSystemMessage(
+          `**Provider:** ${config.provider}\n**Model:** ${config.model ?? "(default)"}\n**Max Tokens:** ${config.maxTokens}`
+        );
+        return;
+      }
+      if (resolved === "/exit" || resolved === "/q") {
+        process.exit(0);
+      }
+
+      // Normal message - send to LLM
+      const userMessage: LLMMessage = { role: "user", content: userText };
+      const newMessages = [...messages, userMessage];
+      setMessages(newMessages);
+      setIsStreaming(true);
+      setStreamingText("");
+      setToolResults(new Map());
+
+      let currentMessages = newMessages;
+
+      // Tool-use loop: keep calling LLM until no more tool calls
+      while (true) {
+        const stream = provider.streamChat(
+          currentMessages,
+          toolRegistry.getDefinitions(),
+          systemPrompt
+        );
+
+        let assistantText = "";
+        const toolCalls: ToolCall[] = [];
+
+        for await (const event of stream) {
+          switch (event.type) {
+            case "text_delta":
+              assistantText += event.text;
+              setStreamingText(assistantText);
+              break;
+            case "tool_call_complete":
+              toolCalls.push(event.toolCall);
+              break;
+            case "error":
+              assistantText += `\n[Error: ${event.error.message}]`;
+              setStreamingText(assistantText);
+              break;
+            case "done":
+              break;
+          }
+        }
+
+        if (toolCalls.length === 0) {
+          // No tools requested - conversation turn is complete
+          const assistantMsg: LLMMessage = {
+            role: "assistant",
+            content: assistantText,
+          };
+          currentMessages = [...currentMessages, assistantMsg];
+          setMessages(currentMessages);
+          break;
+        }
+
+        // Execute tools and build results
+        const assistantMsg: LLMMessage = {
+          role: "assistant",
+          content: assistantText,
+          tool_calls: toolCalls,
+        };
+        currentMessages = [...currentMessages, assistantMsg];
+
+        const newToolResults = new Map(toolResults);
+        for (const tc of toolCalls) {
+          const result = await toolRegistry.execute(tc.name, tc.arguments);
+          newToolResults.set(tc.id, result);
+          currentMessages = [
+            ...currentMessages,
+            {
+              role: "tool" as const,
+              content: result.output,
+              tool_call_id: tc.id,
+            },
+          ];
+        }
+        setToolResults(newToolResults);
+        setMessages(currentMessages);
+        setStreamingText("");
+
+        // Loop back - LLM will process tool results
+      }
+
+      setIsStreaming(false);
+      setStreamingText("");
+    },
+    [messages, provider, toolRegistry, systemPrompt, toolResults, config, addSystemMessage]
+  );
+
+  return (
+    <Box flexDirection="column" height="100%">
+      <Box flexDirection="column" flexGrow={1}>
+        <Welcome config={config} />
+        <MessageList
+          messages={messages}
+          streamingText={streamingText}
+          toolResults={toolResults}
+        />
+      </Box>
+      <UserInput onSubmit={sendMessage} disabled={isStreaming} />
+    </Box>
+  );
+}
