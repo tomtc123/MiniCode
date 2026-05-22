@@ -2,6 +2,8 @@
 
 A minimal, experimental Claude Code-like CLI tool built with TypeScript and Ink.
 
+![demo](./docs/images/demo.png)
+
 ## Features
 
 - Terminal TUI with rich text rendering and code highlighting
