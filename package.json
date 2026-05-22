@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "tsx src/index.tsx",
-    "dev": "tsx watch src/index.tsx",
+    "dev": "node --watch --import tsx src/index.tsx",
     "typecheck": "tsc --noEmit",
     "build": "tsx build.ts",
     "build:bundle": "esbuild src/index.tsx --bundle --platform=node --format=esm --outfile=dist/minicode.mjs --minify --external:node:* --external:assert --alias:react-devtools-core=./stubs/empty.js",
