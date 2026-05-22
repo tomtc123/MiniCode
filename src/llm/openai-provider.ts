@@ -41,7 +41,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
           content: msg.content,
         });
       } else if (msg.role === "assistant" && msg.tool_calls?.length) {
-        openaiMessages.push({
+        const assistantMsg: Record<string, unknown> = {
           role: "assistant",
           content: msg.content || null,
           tool_calls: msg.tool_calls.map((tc) => ({
@@ -52,12 +52,20 @@ export class OpenAICompatibleProvider implements LLMProvider {
               arguments: JSON.stringify(tc.arguments),
             },
           })),
-        });
+        };
+        if (msg.reasoning_content) {
+          assistantMsg.reasoning_content = msg.reasoning_content;
+        }
+        openaiMessages.push(assistantMsg as unknown as OpenAI.Chat.ChatCompletionMessageParam);
       } else {
-        openaiMessages.push({
+        const plainMsg: Record<string, unknown> = {
           role: msg.role as "user" | "assistant" | "system",
           content: msg.content,
-        });
+        };
+        if (msg.role === "assistant" && msg.reasoning_content) {
+          plainMsg.reasoning_content = msg.reasoning_content;
+        }
+        openaiMessages.push(plainMsg as unknown as OpenAI.Chat.ChatCompletionMessageParam);
       }
     }
 
@@ -87,6 +95,12 @@ export class OpenAICompatibleProvider implements LLMProvider {
       for await (const chunk of stream) {
         const delta = chunk.choices[0]?.delta;
         if (!delta) continue;
+
+        // DeepSeek reasoning_content
+        const reasoning = (delta as Record<string, unknown>).reasoning_content;
+        if (reasoning && typeof reasoning === "string") {
+          yield { type: "reasoning_delta", text: reasoning };
+        }
 
         if (delta.content) {
           yield { type: "text_delta", text: delta.content };

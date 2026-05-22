@@ -8,6 +8,7 @@ const MOCK_RESPONSES: Record<string, string> = {
   file_write: "I'll write that file for you.",
   hello: "Hi there! I'm a mock LLM running without a real API key. Everything I say is simulated.",
   help: "I can help you with:\n- **file_read**: Read file contents\n- **file_write**: Write files\n- **shell**: Run shell commands\n\nJust ask and I'll simulate the response!",
+  code: "Here's an example of code rendering:\n\n```typescript\nfunction greet(name: string): string {\n  return `Hello, ${name}!`;\n}\n\nconst message = greet(\"MiniCode\");\nconsole.log(message);\n```\n\nYou can also use `inline code` for small snippets.",
 };
 
 function sleep(ms: number) {

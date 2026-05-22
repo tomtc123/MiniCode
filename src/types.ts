@@ -9,6 +9,7 @@ export interface LLMMessage {
   content: string;
   tool_call_id?: string;
   tool_calls?: ToolCall[];
+  reasoning_content?: string;
 }
 
 export interface LLMToolDefinition {
@@ -19,6 +20,7 @@ export interface LLMToolDefinition {
 
 export type StreamEvent =
   | { type: "text_delta"; text: string }
+  | { type: "reasoning_delta"; text: string }
   | { type: "tool_call_start"; toolCall: ToolCall }
   | { type: "tool_call_delta"; toolCallId: string; argumentDelta: string }
   | { type: "tool_call_complete"; toolCall: ToolCall }

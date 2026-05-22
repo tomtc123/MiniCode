@@ -89,6 +89,7 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
         );
 
         let assistantText = "";
+        let reasoningText = "";
         const toolCalls: ToolCall[] = [];
 
         for await (const event of stream) {
@@ -96,6 +97,9 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
             case "text_delta":
               assistantText += event.text;
               setStreamingText(assistantText);
+              break;
+            case "reasoning_delta":
+              reasoningText += event.text;
               break;
             case "tool_call_complete":
               toolCalls.push(event.toolCall);
@@ -114,6 +118,7 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
           const assistantMsg: LLMMessage = {
             role: "assistant",
             content: assistantText,
+            reasoning_content: reasoningText || undefined,
           };
           currentMessages = [...currentMessages, assistantMsg];
           setMessages(currentMessages);
@@ -125,6 +130,7 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
           role: "assistant",
           content: assistantText,
           tool_calls: toolCalls,
+          reasoning_content: reasoningText || undefined,
         };
         currentMessages = [...currentMessages, assistantMsg];
 

@@ -1,4 +1,5 @@
 import { Box, Text } from "ink";
+import SyntaxHighlight from "ink-syntax-highlight";
 
 interface CodeBlockProps {
   code: string;
@@ -22,14 +23,7 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
           {language}
         </Text>
       )}
-      {lines.map((line, i) => (
-        <Text key={i}>
-          <Text color="gray" dimColor>
-            {String(i + 1).padStart(maxLineNumWidth)} │{" "}
-          </Text>
-          <Text color="white">{line}</Text>
-        </Text>
-      ))}
+      <SyntaxHighlight code={code} language={language ?? "text"} />
     </Box>
   );
 }
