@@ -2,6 +2,7 @@ import { MockProvider } from "./src/llm/mock-provider.js";
 import { ToolRegistry } from "./src/tools/registry.js";
 import { fileReadTool } from "./src/tools/file-read.js";
 import { shellTool } from "./src/tools/shell.js";
+import { diffTool } from "./src/tools/diff.js";
 import type { LLMMessage, StreamEvent } from "./src/types.js";
 
 async function testMockProvider() {
@@ -11,6 +12,7 @@ async function testMockProvider() {
   const registry = new ToolRegistry();
   registry.register(fileReadTool);
   registry.register(shellTool);
+  registry.register(diffTool);
 
   // Test 1: Normal text response
   console.log("Test 1: Normal text response");
@@ -64,6 +66,33 @@ async function testMockProvider() {
     ];
   }
   console.log("✓ Test 3 passed\n");
+
+  // Test 4: Diff tool call
+  console.log("Test 4: Diff tool call");
+  const messages4: LLMMessage[] = [{ role: "user", content: "compare these two files" }];
+  const diffCalls: StreamEvent[] = [];
+  for await (const event of provider.streamChat(messages4, registry.getDefinitions())) {
+    if (event.type === "tool_call_complete") diffCalls.push(event);
+  }
+  if (diffCalls.length > 0 && diffCalls[0].type === "tool_call_complete") {
+    console.log("Tool call:", diffCalls[0].toolCall.name);
+    const result = await registry.execute(diffCalls[0].toolCall.name, diffCalls[0].toolCall.arguments);
+    console.log("Diff output:\n" + result.output);
+    console.log("✓ Test 4 passed\n");
+  } else {
+    console.log("✗ Test 4 failed - no diff tool call\n");
+  }
+
+  // Test 5: Diff tool directly (string diff)
+  console.log("Test 5: Diff tool - string diff");
+  const diffResult = await diffTool.execute({
+    old: "line 1\nline 2\nline 3\n",
+    new: "line 1\nline 2 modified\nline 3\nline 4\n",
+    labelA: "a.txt",
+    labelB: "b.txt",
+  });
+  console.log("Diff output:\n" + diffResult.output);
+  console.log("✓ Test 5 passed\n");
 
   console.log("=== All tests passed! ===");
 }

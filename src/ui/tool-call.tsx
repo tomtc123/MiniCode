@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import type { ToolCall } from "../types.js";
+import { DiffBlock } from "./diff-block.js";
 
 interface ToolCallDisplayProps {
   toolCall: ToolCall;
@@ -8,6 +9,8 @@ interface ToolCallDisplayProps {
 }
 
 export function ToolCallDisplay({ toolCall, result, isError }: ToolCallDisplayProps) {
+  const isDiff = toolCall.name === "diff" && result && !isError && result.startsWith("--- ");
+
   return (
     <Box flexDirection="column" marginY={0} paddingX={1}>
       <Box>
@@ -20,7 +23,12 @@ export function ToolCallDisplay({ toolCall, result, isError }: ToolCallDisplayPr
           {JSON.stringify(toolCall.arguments)}
         </Text>
       </Box>
-      {result !== undefined && (
+      {result !== undefined && isDiff && (
+        <Box paddingLeft={2}>
+          <DiffBlock output={result} />
+        </Box>
+      )}
+      {result !== undefined && !isDiff && (
         <Box paddingLeft={2}>
           <Text color={isError ? "red" : "gray"} dimColor>
             {result.length > 500 ? result.slice(0, 500) + "..." : result}

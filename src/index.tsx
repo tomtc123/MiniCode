@@ -6,6 +6,7 @@ import { ToolRegistry } from "./tools/registry.js";
 import { fileReadTool } from "./tools/file-read.js";
 import { fileWriteTool } from "./tools/file-write.js";
 import { shellTool } from "./tools/shell.js";
+import { diffTool } from "./tools/diff.js";
 import { App } from "./ui/app.js";
 
 const program = new Command()
@@ -31,5 +32,6 @@ const registry = new ToolRegistry();
 registry.register(fileReadTool);
 registry.register(fileWriteTool);
 registry.register(shellTool);
+registry.register(diffTool);
 
 render(<App config={config} provider={provider} toolRegistry={registry} />);

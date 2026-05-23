@@ -36,7 +36,13 @@ function renderContent(content: string) {
       return <CodeBlock key={i} code={part.content} language={part.lang} />;
     }
     // Simple markdown-like rendering
-    return part.content.split("\n").map((line, j) => {
+    // Trim blank lines adjacent to code blocks
+    const prevIsCode = i > 0 && parts[i - 1].type === "code";
+    const nextIsCode = i < parts.length - 1 && parts[i + 1].type === "code";
+    let text = part.content;
+    if (prevIsCode) text = text.replace(/^\n+/, "");
+    if (nextIsCode) text = text.replace(/\n+$/, "");
+    return text.split("\n").map((line, j) => {
       // Bold: **text**
       const rendered = line.replace(/\*\*(.*?)\*\*/g, "$1");
       // Inline code: `text`

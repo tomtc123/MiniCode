@@ -2,12 +2,13 @@ import type { LLMProvider } from "./provider.js";
 import type { LLMMessage, LLMToolDefinition, StreamEvent } from "../types.js";
 
 const MOCK_RESPONSES: Record<string, string> = {
-  default: "Hello! I'm MiniCode's mock assistant. I can simulate reading files, writing files, and running shell commands. Try asking me to do something!",
+  default: "Hello! I'm MiniCode's mock assistant. I can simulate reading files, writing files, running shell commands, and diffing files. Try asking me to do something!",
   file_read: "I'll read that file for you.",
   shell: "I'll run that command for you.",
   file_write: "I'll write that file for you.",
+  diff: "I'll compare those files for you.",
   hello: "Hi there! I'm a mock LLM running without a real API key. Everything I say is simulated.",
-  help: "I can help you with:\n- **file_read**: Read file contents\n- **file_write**: Write files\n- **shell**: Run shell commands\n\nJust ask and I'll simulate the response!",
+  help: "I can help you with:\n- **file_read**: Read file contents\n- **file_write**: Write files\n- **shell**: Run shell commands\n- **diff**: Compare files or text\n\nJust ask and I'll simulate the response!",
   code: "Here's an example of code rendering:\n\n```typescript\nfunction greet(name: string): string {\n  return `Hello, ${name}!`;\n}\n\nconst message = greet(\"MiniCode\");\nconsole.log(message);\n```\n\nYou can also use `inline code` for small snippets.",
 };
 
@@ -35,6 +36,19 @@ function pickToolCall(userText: string): { name: string; args: Record<string, un
   }
   if (lower.includes("write") || lower.includes("create file")) {
     return { name: "file_write", args: { path: "test-output.txt", content: "Hello from MiniCode mock!" } };
+  }
+  if (lower.includes("diff") || lower.includes("compare")) {
+    return {
+      name: "diff",
+      args: {
+        // old: "function hello() {\n  console.log('hello');\n}\n",
+        // new: "function hello(name: string) {\n  console.log(`hello, ${name}!`);\n}\n",
+        // labelA: "old.ts",
+        // labelB: "new.ts",
+        "pathA": "hello1.py",
+        "pathB": "hello2.py",
+      },
+    };
   }
   return null;
 }

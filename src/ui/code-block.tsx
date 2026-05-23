@@ -7,8 +7,7 @@ interface CodeBlockProps {
 }
 
 export function CodeBlock({ code, language }: CodeBlockProps) {
-  const lines = code.split("\n");
-  const maxLineNumWidth = String(lines.length).length;
+  const trimmed = code.replace(/\n+$/, "");
 
   return (
     <Box
@@ -16,6 +15,7 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
       borderStyle="single"
       borderColor="gray"
       paddingX={1}
+      paddingY={0}
       marginY={0}
     >
       {language && (
@@ -23,7 +23,7 @@ export function CodeBlock({ code, language }: CodeBlockProps) {
           {language}
         </Text>
       )}
-      <SyntaxHighlight code={code} language={language ?? "text"} />
+      <SyntaxHighlight code={trimmed} language={language ?? "text"} />
     </Box>
   );
 }
