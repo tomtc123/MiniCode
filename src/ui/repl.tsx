@@ -46,6 +46,9 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
   const thinkingDuration = useRef(0);
   const outputTokenChars = useRef(0);
   const hasFirstToken = useRef(false);
+  const hasToolCalls = useRef(false);
+  const [waitingForToolLoop, setWaitingForToolLoop] = useState(false);
+  const activeCallsRef = useRef(0);
   const [statusTick, setStatusTick] = useState(0);
 
   // Initialize stats store and session on mount
@@ -121,6 +124,7 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
       const userMessage: LLMMessage = { role: "user", content: userText };
       const newMessages = [...messages, userMessage];
       setMessages(newMessages);
+      activeCallsRef.current++;
       setIsStreaming(true);
       setStreamingText("");
       setToolResults(new Map());
@@ -131,6 +135,8 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
       thinkingDuration.current = 0;
       outputTokenChars.current = 0;
       hasFirstToken.current = false;
+      hasToolCalls.current = false;
+      setWaitingForToolLoop(false);
 
       let currentMessages = newMessages;
 
@@ -142,6 +148,10 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
             toolRegistry.getDefinitions(),
             systemPrompt
           );
+
+          streamStartTime.current = Date.now();
+          hasFirstToken.current = false;
+          hasToolCalls.current = false;
 
           let assistantText = "";
           let reasoningText = "";
@@ -158,7 +168,6 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
                     thinkingDuration.current = Date.now() - thinkingStartTime.current;
                   }
                 }
-                setStreamingText(assistantText);
                 setStatusTick((t) => t + 1);
                 break;
               case "reasoning_delta":
@@ -166,6 +175,9 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
                 if (thinkingStartTime.current === 0) {
                   thinkingStartTime.current = Date.now();
                 }
+                break;
+              case "tool_call_start":
+                hasToolCalls.current = true;
                 break;
               case "tool_call_complete":
                 toolCalls.push(event.toolCall);
@@ -178,7 +190,6 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
               }
               case "error":
                 assistantText += `\n[Error: ${event.error.message}]`;
-                setStreamingText(assistantText);
                 break;
               case "done":
                 break;
@@ -222,12 +233,17 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
           setToolResults(newToolResults);
           setMessages(currentMessages);
           setStreamingText("");
+          setWaitingForToolLoop(true);
 
           // Loop back - LLM will process tool results
         }
       } finally {
-        setIsStreaming(false);
-        setStreamingText("");
+        activeCallsRef.current--;
+        if (activeCallsRef.current <= 0) {
+          activeCallsRef.current = 0;
+          setIsStreaming(false);
+          setStreamingText("");
+        }
       }
     },
     [messages, provider, toolRegistry, systemPrompt, toolResults, config, addSystemMessage]
@@ -252,7 +268,7 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
           toolResults={toolResults}
         />
       </Box>
-      {isStreaming && (
+      {isStreaming && !waitingForToolLoop && (
         <StreamingStatus
           startTime={streamStartTime.current}
           tokenCount={outputTokenChars.current}
@@ -260,7 +276,7 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
           hasStartedStreaming={hasFirstToken.current}
         />
       )}
-      <UserInput onSubmit={sendMessage} disabled={isStreaming} />
+      <UserInput onSubmit={sendMessage} disabled={isStreaming && !waitingForToolLoop} />
     </Box>
   );
 }

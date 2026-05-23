@@ -13,7 +13,7 @@ const LOGO = [
 const TIPS = [
   "Type a message to start chatting with the LLM",
   'Ask me to read files: "read package.json"',
-  'Run shell commands: "run ls -la"',
+  'Run shell commands: "run dir"',
   'Write files: "write a hello world to test.js"',
   "Press Ctrl+C to exit at any time",
 ];

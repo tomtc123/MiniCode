@@ -1,11 +1,12 @@
 import { Box, Text } from "ink";
-import type { LLMMessage } from "../types.js";
+import type { LLMMessage, ToolCall } from "../types.js";
 import { ToolCallDisplay } from "./tool-call.js";
 import { CodeBlock } from "./code-block.js";
 import { DiffBlock } from "./diff-block.js";
 
 interface MessageProps {
   message: LLMMessage;
+  allMessages?: LLMMessage[];
   toolResults?: Map<string, { output: string; isError?: boolean }>;
 }
 
@@ -71,7 +72,7 @@ function renderContent(content: string) {
   });
 }
 
-export function Message({ message, toolResults }: MessageProps) {
+export function Message({ message, allMessages, toolResults }: MessageProps) {
   if (message.role === "user") {
     return (
       <Box paddingX={1} marginY={0}>
@@ -84,24 +85,31 @@ export function Message({ message, toolResults }: MessageProps) {
   }
 
   if (message.role === "assistant") {
+    if (!message.content) return null;
     return (
       <Box flexDirection="column" paddingX={1} marginY={0}>
-        {message.tool_calls?.map((tc) => (
-          <ToolCallDisplay
-            key={tc.id}
-            toolCall={tc}
-            result={toolResults?.get(tc.id)?.output}
-            isError={toolResults?.get(tc.id)?.isError}
-          />
-        ))}
-        {message.content && renderContent(message.content)}
+        {renderContent(message.content)}
       </Box>
     );
   }
 
-  if (message.role === "tool") {
-    // Tool results are shown inline with tool_calls above
-    return null;
+  if (message.role === "tool" && allMessages && message.tool_call_id) {
+    let toolCall: ToolCall | undefined;
+    for (let i = allMessages.indexOf(message) - 1; i >= 0; i--) {
+      const m = allMessages[i];
+      if (m.role === "assistant" && m.tool_calls) {
+        toolCall = m.tool_calls.find((tc) => tc.id === message.tool_call_id);
+        if (toolCall) break;
+      }
+    }
+    if (!toolCall) return null;
+    return (
+      <ToolCallDisplay
+        toolCall={toolCall}
+        result={toolResults?.get(message.tool_call_id)?.output}
+        isError={toolResults?.get(message.tool_call_id)?.isError}
+      />
+    );
   }
 
   return null;

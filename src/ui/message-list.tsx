@@ -16,9 +16,10 @@ export function MessageList({
 }: MessageListProps) {
   return (
     <Box flexDirection="column" flexGrow={1} paddingX={1}>
-      {messages.map((msg, i) => (
-        <Message key={i} message={msg} toolResults={toolResults} />
-      ))}
+      {messages.map((msg, i) => {
+        if (msg.role === "assistant" && i > 0 && messages[i - 1].role === "tool") return null;
+        return <Message key={i} message={msg} allMessages={messages} toolResults={toolResults} />;
+      })}
       {streamingText && (
         <Box paddingX={1} marginY={0}>
           <Text color="green">

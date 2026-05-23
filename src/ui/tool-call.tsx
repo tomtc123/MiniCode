@@ -31,7 +31,7 @@ export function ToolCallDisplay({ toolCall, result, isError }: ToolCallDisplayPr
       {result !== undefined && !isDiff && (
         <Box paddingLeft={2}>
           <Text color={isError ? "red" : "gray"} dimColor>
-            {result.length > 500 ? result.slice(0, 500) + "..." : result}
+            {result.length > 10000 ? result.slice(0, 10000) + "\n...(truncated)" : result}
           </Text>
         </Box>
       )}

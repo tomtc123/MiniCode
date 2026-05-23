@@ -14,21 +14,21 @@ export const shellTool: ToolDefinition = {
   async execute(args) {
     const cmd = String(args.command);
     const isWindows = process.platform === "win32";
-    const shell = isWindows ? "cmd" : "/bin/sh";
-    const flag = isWindows ? "/c" : "-c";
 
     return new Promise((resolve) => {
       exec(
         cmd,
-        { shell: isWindows ? "cmd.exe" : "/bin/sh", maxBuffer: 1024 * 1024 * 10 },
+        { shell: isWindows ? "powershell.exe" : "/bin/sh", maxBuffer: 1024 * 1024 * 10 },
         (error, stdout, stderr) => {
+          const trimLines = (s: string) =>
+            s.replace(/[^\S\n]+$/gm, "").replace(/\n{3,}/g, "\n\n");
           if (error) {
             resolve({
-              output: `${stdout}${stderr}\nExit code: ${error.code}`,
+              output: `${trimLines(stdout)}${trimLines(stderr)}\nExit code: ${error.code}`,
               isError: true,
             });
           } else {
-            resolve({ output: stdout || "(no output)" });
+            resolve({ output: trimLines(stdout) || "(no output)" });
           }
         }
       );
