@@ -11,6 +11,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   { name: "/clear", description: "Clear conversation history", alias: "/c" },
   { name: "/tools", description: "List available tools", alias: "/t" },
   { name: "/provider", description: "Show current LLM provider info", alias: "/p" },
+  { name: "/stats", description: "View usage statistics", alias: "/st" },
   { name: "/exit", description: "Exit MiniCode", alias: "/q" },
 ];
 

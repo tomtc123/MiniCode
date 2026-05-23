@@ -85,6 +85,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
         tools: openaiTools?.length ? openaiTools : undefined,
         max_tokens: 4096,
         stream: true,
+        stream_options: { include_usage: true },
       });
 
       const toolCallBuffers = new Map<
@@ -139,6 +140,16 @@ export class OpenAICompatibleProvider implements LLMProvider {
               }
             }
           }
+        }
+
+        if (chunk.usage) {
+          yield {
+            type: "usage",
+            usage: {
+              inputTokens: chunk.usage.prompt_tokens,
+              outputTokens: chunk.usage.completion_tokens,
+            },
+          };
         }
 
         if (chunk.choices[0]?.finish_reason === "stop") {

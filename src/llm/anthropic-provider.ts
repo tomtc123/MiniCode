@@ -85,9 +85,24 @@ export class AnthropicProvider implements LLMProvider {
       const toolCalls: ToolCall[] = [];
       let currentToolCall: ToolCall | null = null;
       let currentArgs = "";
+      let inputTokens = 0;
 
       for await (const event of stream) {
-        if (event.type === "content_block_start") {
+        if (event.type === "message_start") {
+          if (event.message?.usage) {
+            inputTokens = event.message.usage.input_tokens;
+          }
+        } else if (event.type === "message_delta") {
+          if (event.usage) {
+            yield {
+              type: "usage",
+              usage: {
+                inputTokens,
+                outputTokens: event.usage.output_tokens,
+              },
+            };
+          }
+        } else if (event.type === "content_block_start") {
           if (event.content_block.type === "text") {
             // text block started
           } else if (event.content_block.type === "tool_use") {

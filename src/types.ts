@@ -18,12 +18,18 @@ export interface LLMToolDefinition {
   parameters: Record<string, unknown>;
 }
 
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+}
+
 export type StreamEvent =
   | { type: "text_delta"; text: string }
   | { type: "reasoning_delta"; text: string }
   | { type: "tool_call_start"; toolCall: ToolCall }
   | { type: "tool_call_delta"; toolCallId: string; argumentDelta: string }
   | { type: "tool_call_complete"; toolCall: ToolCall }
+  | { type: "usage"; usage: TokenUsage }
   | { type: "done" }
   | { type: "error"; error: Error };
 
