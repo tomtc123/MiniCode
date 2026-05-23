@@ -10,7 +10,7 @@
     "build": "tsx build.ts",
     "build:bundle": "esbuild src/index.tsx --bundle --platform=node --format=esm --outfile=dist/minicode.mjs --minify --external:node:* --external:assert --alias:react-devtools-core=./stubs/empty.js",
     "build:exe": "tsx build.ts --exe",
-    "build:bun": "bun build --compile src/index.tsx --outfile minicode.exe"
+    "build:bun": "bun build --compile src/index.tsx --outfile minicode.exe && tsx build-icon.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -33,6 +33,8 @@
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.12",
     "esbuild": "^0.24.0",
+    "rcedit": "^5.0.2",
+    "sharp": "^0.34.5",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

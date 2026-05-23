@@ -8,7 +8,7 @@
 
 import { execSync } from "node:child_process";
 import { writeFileSync, mkdirSync, existsSync, copyFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { resolve } from "node:path";
 
 const isExe = process.argv.includes("--exe");
 const outDir = resolve("dist");
@@ -94,6 +94,30 @@ try {
   console.log("\n   Try running manually:");
   console.log(`   npx postject ${outExe} NODE_SEA_BLOB dist/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2`);
   process.exit(1);
+}
+
+// Step 6: Embed icon
+console.log("6️⃣  Embedding icon...");
+const iconSvg = resolve("docs/images/icon.svg");
+const iconPng = resolve("dist/icon.png");
+
+if (existsSync(iconSvg)) {
+  try {
+    const sharp = (await import("sharp")).default;
+    await sharp(iconSvg, { density: 300 })
+      .resize(256, 256)
+      .png()
+      .toFile(iconPng);
+    console.log("   ✓ SVG → PNG (256x256)\n");
+
+    const { rcedit } = await import("rcedit");
+    await rcedit(outExe, { icon: iconPng });
+    console.log("   ✓ Icon embedded in executable\n");
+  } catch (err) {
+    console.warn("   ⚠ Icon embedding skipped:", err);
+  }
+} else {
+  console.log("   ⚠ docs/images/icon.svg not found, skipping icon\n");
 }
 
 console.log("✅ Done! Executable created:", outExe);
