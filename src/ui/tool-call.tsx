@@ -9,7 +9,7 @@ interface ToolCallDisplayProps {
 }
 
 export function ToolCallDisplay({ toolCall, result, isError }: ToolCallDisplayProps) {
-  const isDiff = toolCall.name === "diff" && result && !isError && result.startsWith("--- ");
+  const isDiff = toolCall.name === "diff" && result && !isError && (result.startsWith("--- ") || result.includes("\n@@ "));
 
   return (
     <Box flexDirection="column" marginY={0} paddingX={1}>

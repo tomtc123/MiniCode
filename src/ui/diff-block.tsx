@@ -120,6 +120,7 @@ function parseDiff(output: string): { lines: DiffLine[]; added: number; removed:
   let removed = 0;
 
   for (const line of raw) {
+    if (line === "\\ No newline at end of file") continue;
     if (line.startsWith("--- ") || line.startsWith("+++ ")) {
       lines.push({ type: "hdr", oldNum: null, newNum: null, content: line });
     } else if (line.startsWith("@@")) {

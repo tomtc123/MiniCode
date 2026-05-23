@@ -66,7 +66,9 @@ export class MockProvider implements LLMProvider {
 
     // If the last message is a tool result, give a summary (check FIRST to avoid re-triggering tools)
     if (lastMsg?.role === "tool") {
-      const summary = `Here's the result:\n\n\`\`\`\n${lastMsg.content.slice(0, 500)}\n\`\`\`\n\nWhat would you like to do next?`;
+      const raw = lastMsg.content.slice(0, 500);
+      const lang = raw.startsWith("--- ") || raw.includes("\n@@ ") ? "diff" : "";
+      const summary = `Here's the result:\n\n\`\`\`${lang}\n${raw}\n\`\`\`\n\nWhat would you like to do next?`;
       for (const char of summary) {
         yield { type: "text_delta", text: char };
         await sleep(10);

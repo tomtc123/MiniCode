@@ -42,8 +42,8 @@ export const diffTool: ToolDefinition = {
       }
 
       const output = createTwoFilesPatch(labelA, labelB, oldText, newText);
-      // Strip the "=== ... ===" header line — not useful in terminal display
-      const trimmed = output.replace(/^=+\n/, "");
+      // Strip "Index:" and "=== ... ===" header lines — not useful in terminal display
+      const trimmed = output.replace(/^(Index:.*\n)?=+\n/, "");
       // If no hunk markers, files are identical
       if (!trimmed.includes("@@")) return { output: "(no differences)" };
       return { output: trimmed };

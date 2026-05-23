@@ -2,6 +2,7 @@ import { Box, Text } from "ink";
 import type { LLMMessage } from "../types.js";
 import { ToolCallDisplay } from "./tool-call.js";
 import { CodeBlock } from "./code-block.js";
+import { DiffBlock } from "./diff-block.js";
 
 interface MessageProps {
   message: LLMMessage;
@@ -33,6 +34,10 @@ function renderContent(content: string) {
 
   return parts.map((part, i) => {
     if (part.type === "code") {
+      const isDiff = part.lang === "diff" || (!part.lang && (part.content.startsWith("--- ") || part.content.includes("\n@@ ")));
+      if (isDiff) {
+        return <DiffBlock key={i} output={part.content} />;
+      }
       return <CodeBlock key={i} code={part.content} language={part.lang} />;
     }
     // Simple markdown-like rendering
