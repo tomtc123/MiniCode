@@ -15,7 +15,9 @@ function rand(min: number, max: number): number {
 }
 
 function makeModelUsage(inputTokens: number, outputTokens: number, requests: number): ModelUsage {
-  return { inputTokens, outputTokens, requests };
+  const thinkingTokens = Math.floor(outputTokens * (Math.random() * 0.3 + 0.1)); // 10-40% of output
+  const totalDuration = requests * (Math.floor(Math.random() * 30000) + 5000); // 5-35s per request
+  return { inputTokens, outputTokens, thinkingTokens, totalDuration, requests };
 }
 
 export function generateSeedData(): StatsData {

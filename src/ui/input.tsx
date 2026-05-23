@@ -136,7 +136,7 @@ export function UserInput({ onSubmit, disabled }: UserInputProps) {
           {afterCursor}
         </Text>
         {disabled && (
-          <Text color="gray"> (waiting...)</Text>
+          <Text color="gray"> </Text>
         )}
       </Box>
     </Box>

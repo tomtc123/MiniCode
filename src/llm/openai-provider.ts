@@ -143,11 +143,15 @@ export class OpenAICompatibleProvider implements LLMProvider {
         }
 
         if (chunk.usage) {
+          const usage = chunk.usage as unknown as Record<string, unknown>;
+          const details = usage.completion_tokens_details as Record<string, number> | undefined;
+          const reasoningTokens = details?.reasoning_tokens ?? 0;
           yield {
             type: "usage",
             usage: {
               inputTokens: chunk.usage.prompt_tokens,
               outputTokens: chunk.usage.completion_tokens,
+              thinkingTokens: reasoningTokens || undefined,
             },
           };
         }

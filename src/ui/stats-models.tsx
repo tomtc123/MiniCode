@@ -52,12 +52,14 @@ export function StatsModels({ data, filter }: StatsModelsProps) {
                 {"  "}
                 <Text color={color as any}>●</Text>
                 {" "}
-                <Text color={color as any} bold>{entry.model.padEnd(25)}</Text>
-                <Text color="white">{`${entry.percentage.toFixed(1)}%`.padStart(7)}</Text>
+                <Text color={color as any} bold>{entry.model.padEnd(20)}</Text>
+                <Text color="white">{`${entry.percentage.toFixed(1)}%`.padStart(6)}</Text>
                 <Text color="gray" dimColor>{"  In: "}</Text>
-                <Text color="white">{formatTokens(entry.inputTokens).padStart(8)}</Text>
+                <Text color="white">{formatTokens(entry.inputTokens).padStart(7)}</Text>
                 <Text color="gray" dimColor>{"  Out: "}</Text>
-                <Text color="white">{formatTokens(entry.outputTokens).padStart(8)}</Text>
+                <Text color="white">{formatTokens(entry.outputTokens).padStart(7)}</Text>
+                <Text color="gray" dimColor>{"  Think: "}</Text>
+                <Text color="cyan">{formatTokens(entry.thinkingTokens).padStart(7)}</Text>
               </Text>
             </Box>
           );

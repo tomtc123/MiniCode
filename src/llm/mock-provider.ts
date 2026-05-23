@@ -57,7 +57,7 @@ export class MockProvider implements LLMProvider {
         yield { type: "text_delta", text: char };
         await sleep(10);
       }
-      yield { type: "usage", usage: { inputTokens: Math.floor(Math.random() * 500) + 100, outputTokens: Math.floor(Math.random() * 300) + 50 } };
+      yield { type: "usage", usage: { inputTokens: Math.floor(Math.random() * 500) + 100, outputTokens: Math.floor(Math.random() * 300) + 50, thinkingTokens: Math.floor(Math.random() * 200) + 50 } };
       yield { type: "done" };
       return;
     }
@@ -71,7 +71,7 @@ export class MockProvider implements LLMProvider {
       await sleep(300);
       yield { type: "tool_call_complete", toolCall: { id: toolId, name: toolCall.name, arguments: toolCall.args } };
       await sleep(200);
-      yield { type: "usage", usage: { inputTokens: Math.floor(Math.random() * 500) + 100, outputTokens: Math.floor(Math.random() * 300) + 50 } };
+      yield { type: "usage", usage: { inputTokens: Math.floor(Math.random() * 500) + 100, outputTokens: Math.floor(Math.random() * 300) + 50, thinkingTokens: Math.floor(Math.random() * 200) + 50 } };
       yield { type: "done" };
       return;
     }
@@ -82,7 +82,7 @@ export class MockProvider implements LLMProvider {
       yield { type: "text_delta", text: char };
       await sleep(15);
     }
-    yield { type: "usage", usage: { inputTokens: Math.floor(Math.random() * 500) + 100, outputTokens: Math.floor(Math.random() * 300) + 50 } };
+    yield { type: "usage", usage: { inputTokens: Math.floor(Math.random() * 500) + 100, outputTokens: Math.floor(Math.random() * 300) + 50, thinkingTokens: Math.floor(Math.random() * 200) + 50 } };
     yield { type: "done" };
   }
 }

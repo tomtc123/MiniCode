@@ -28,11 +28,15 @@ export function StatsOverview({ data, filter }: StatsOverviewProps) {
         ))}
       </Box>
 
-      {/* Stats grid - 2 columns, 4 rows */}
+      {/* Stats grid - 2 columns, 5 rows */}
       <Box flexDirection="column" marginTop={1}>
         <StatRow
           label1="Favorite model" value1={stats.favoriteModel}
           label2="Total tokens" value2={formatTokens(stats.totalTokens)}
+        />
+        <StatRow
+          label1="Thinking tokens" value1={formatTokens(stats.totalThinkingTokens)}
+          label2="Total duration" value2={stats.totalDuration}
         />
         <StatRow
           label1="Sessions" value1={String(stats.sessionsCount)}

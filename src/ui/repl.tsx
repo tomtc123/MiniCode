@@ -10,6 +10,7 @@ import { SLASH_COMMANDS } from "./slash-menu.js";
 import type { Config } from "../types.js";
 import { getStatsStore } from "../stats/store.js";
 import { StatsView } from "./stats-view.js";
+import { StreamingStatus } from "./streaming-status.js";
 
 interface REPLProps {
   provider: LLMProvider;
@@ -38,6 +39,14 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
   const sessionId = useRef<string>("");
   const messagesRef = useRef<LLMMessage[]>([]);
   messagesRef.current = messages;
+
+  // Streaming metrics
+  const streamStartTime = useRef(0);
+  const thinkingStartTime = useRef(0);
+  const thinkingDuration = useRef(0);
+  const outputTokenChars = useRef(0);
+  const hasFirstToken = useRef(false);
+  const [statusTick, setStatusTick] = useState(0);
 
   // Initialize stats store and session on mount
   useEffect(() => {
@@ -116,6 +125,13 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
       setStreamingText("");
       setToolResults(new Map());
 
+      // Reset streaming metrics
+      streamStartTime.current = Date.now();
+      thinkingStartTime.current = 0;
+      thinkingDuration.current = 0;
+      outputTokenChars.current = 0;
+      hasFirstToken.current = false;
+
       let currentMessages = newMessages;
 
       try {
@@ -135,18 +151,31 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
             switch (event.type) {
               case "text_delta":
                 assistantText += event.text;
+                outputTokenChars.current += event.text.length;
+                if (!hasFirstToken.current) {
+                  hasFirstToken.current = true;
+                  if (thinkingStartTime.current > 0) {
+                    thinkingDuration.current = Date.now() - thinkingStartTime.current;
+                  }
+                }
                 setStreamingText(assistantText);
+                setStatusTick((t) => t + 1);
                 break;
               case "reasoning_delta":
                 reasoningText += event.text;
+                if (thinkingStartTime.current === 0) {
+                  thinkingStartTime.current = Date.now();
+                }
                 break;
               case "tool_call_complete":
                 toolCalls.push(event.toolCall);
                 break;
-              case "usage":
-                statsStore.current.recordUsage(config.model ?? config.provider, event.usage);
-                statsStore.current.recordSessionUsage(sessionId.current, config.model ?? config.provider, event.usage);
+              case "usage": {
+                const duration = Date.now() - streamStartTime.current;
+                statsStore.current.recordUsage(config.model ?? config.provider, event.usage, duration);
+                statsStore.current.recordSessionUsage(sessionId.current, config.model ?? config.provider, event.usage, duration);
                 break;
+              }
               case "error":
                 assistantText += `\n[Error: ${event.error.message}]`;
                 setStreamingText(assistantText);
@@ -223,6 +252,14 @@ export function REPL({ provider, toolRegistry, systemPrompt, config }: REPLProps
           toolResults={toolResults}
         />
       </Box>
+      {isStreaming && (
+        <StreamingStatus
+          startTime={streamStartTime.current}
+          tokenCount={outputTokenChars.current}
+          thinkingDuration={thinkingDuration.current}
+          hasStartedStreaming={hasFirstToken.current}
+        />
+      )}
       <UserInput onSubmit={sendMessage} disabled={isStreaming} />
     </Box>
   );

@@ -21,6 +21,7 @@ export interface LLMToolDefinition {
 export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
+  thinkingTokens?: number;
 }
 
 export type StreamEvent =

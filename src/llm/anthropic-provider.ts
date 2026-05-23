@@ -86,6 +86,7 @@ export class AnthropicProvider implements LLMProvider {
       let currentToolCall: ToolCall | null = null;
       let currentArgs = "";
       let inputTokens = 0;
+      let thinkingTokens = 0;
 
       for await (const event of stream) {
         if (event.type === "message_start") {
@@ -99,12 +100,15 @@ export class AnthropicProvider implements LLMProvider {
               usage: {
                 inputTokens,
                 outputTokens: event.usage.output_tokens,
+                thinkingTokens: thinkingTokens || undefined,
               },
             };
           }
         } else if (event.type === "content_block_start") {
           if (event.content_block.type === "text") {
             // text block started
+          } else if (event.content_block.type === "thinking") {
+            // thinking block started
           } else if (event.content_block.type === "tool_use") {
             currentToolCall = {
               id: event.content_block.id,
@@ -120,6 +124,9 @@ export class AnthropicProvider implements LLMProvider {
         } else if (event.type === "content_block_delta") {
           if (event.delta.type === "text_delta") {
             yield { type: "text_delta", text: event.delta.text };
+          } else if (event.delta.type === "thinking_delta") {
+            yield { type: "reasoning_delta", text: event.delta.thinking };
+            thinkingTokens += 1; // rough estimate per delta
           } else if (event.delta.type === "input_json_delta") {
             currentArgs += event.delta.partial_json;
             if (currentToolCall) {

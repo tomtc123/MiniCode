@@ -3,6 +3,8 @@ import type { TokenUsage } from "../types.js";
 export interface ModelUsage {
   inputTokens: number;
   outputTokens: number;
+  thinkingTokens: number;
+  totalDuration: number; // ms
   requests: number;
 }
 
@@ -29,6 +31,8 @@ export type Filter = "all" | "7d" | "30d";
 
 export interface OverviewStats {
   totalTokens: number;
+  totalThinkingTokens: number;
+  totalDuration: string;   // human-readable
   sessionsCount: number;
   longestSession: string;  // human-readable duration
   activeDays: number;
@@ -43,4 +47,6 @@ export interface ModelBreakdown {
   percentage: number;
   inputTokens: number;
   outputTokens: number;
+  thinkingTokens: number;
+  duration: number; // ms
 }

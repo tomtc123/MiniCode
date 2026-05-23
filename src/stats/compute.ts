@@ -31,7 +31,7 @@ function getFilterKeys(data: StatsData, filter: Filter): string[] {
 }
 
 function totalTokensOf(mu: ModelUsage): number {
-  return mu.inputTokens + mu.outputTokens;
+  return mu.inputTokens + mu.outputTokens + (mu.thinkingTokens ?? 0);
 }
 
 function totalTokensAllModels(models: Record<string, ModelUsage>): number {
@@ -55,8 +55,14 @@ const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frid
 export function computeOverviewStats(data: StatsData): OverviewStats {
   // Total tokens
   let totalTokens = 0;
+  let totalThinkingTokens = 0;
+  let totalDurationMs = 0;
   for (const day of Object.values(data.daily)) {
     totalTokens += totalTokensAllModels(day.models);
+    for (const mu of Object.values(day.models)) {
+      totalThinkingTokens += mu.thinkingTokens ?? 0;
+      totalDurationMs += mu.totalDuration ?? 0;
+    }
   }
 
   // Sessions
@@ -84,6 +90,8 @@ export function computeOverviewStats(data: StatsData): OverviewStats {
 
   return {
     totalTokens,
+    totalThinkingTokens,
+    totalDuration: totalDurationMs > 0 ? formatDuration(totalDurationMs) : "0s",
     sessionsCount,
     longestSession: longestMs > 0 ? formatDuration(longestMs) : "0s",
     activeDays,
@@ -165,32 +173,36 @@ export function computeFavoriteModel(data: StatsData): string {
 
 export function computeModelBreakdown(data: StatsData, filter: Filter): ModelBreakdown[] {
   const keys = getFilterKeys(data, filter);
-  const modelTotals: Record<string, { input: number; output: number }> = {};
+  const modelTotals: Record<string, { input: number; output: number; thinking: number; duration: number }> = {};
   let grandTotal = 0;
 
   for (const key of keys) {
     const day = data.daily[key];
     if (!day) continue;
     for (const [model, mu] of Object.entries(day.models)) {
-      if (!modelTotals[model]) modelTotals[model] = { input: 0, output: 0 };
+      if (!modelTotals[model]) modelTotals[model] = { input: 0, output: 0, thinking: 0, duration: 0 };
       modelTotals[model].input += mu.inputTokens;
       modelTotals[model].output += mu.outputTokens;
-      grandTotal += mu.inputTokens + mu.outputTokens;
+      modelTotals[model].thinking += mu.thinkingTokens ?? 0;
+      modelTotals[model].duration += mu.totalDuration ?? 0;
+      grandTotal += mu.inputTokens + mu.outputTokens + (mu.thinkingTokens ?? 0);
     }
   }
 
   const breakdown: ModelBreakdown[] = [];
   for (const [model, vals] of Object.entries(modelTotals)) {
-    const total = vals.input + vals.output;
+    const total = vals.input + vals.output + vals.thinking;
     breakdown.push({
       model,
       percentage: grandTotal > 0 ? (total / grandTotal) * 100 : 0,
       inputTokens: vals.input,
       outputTokens: vals.output,
+      thinkingTokens: vals.thinking,
+      duration: vals.duration,
     });
   }
 
-  breakdown.sort((a, b) => (b.inputTokens + b.outputTokens) - (a.inputTokens + a.outputTokens));
+  breakdown.sort((a, b) => (b.inputTokens + b.outputTokens + b.thinkingTokens) - (a.inputTokens + a.outputTokens + a.thinkingTokens));
   return breakdown;
 }
 

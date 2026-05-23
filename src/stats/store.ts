@@ -20,7 +20,7 @@ function emptyData(): StatsData {
 
 function ensureModelUsage(models: Record<string, ModelUsage>, model: string): ModelUsage {
   if (!models[model]) {
-    models[model] = { inputTokens: 0, outputTokens: 0, requests: 0 };
+    models[model] = { inputTokens: 0, outputTokens: 0, thinkingTokens: 0, totalDuration: 0, requests: 0 };
   }
   return models[model];
 }
@@ -63,11 +63,10 @@ export class StatsStore {
         this.data.sessions[key] = session;
       }
     }
-    this.dirty = true;
-    this.flush();
+    // Don't persist seed data to file - it should only exist in current session
   }
 
-  recordUsage(model: string, usage: TokenUsage): void {
+  recordUsage(model: string, usage: TokenUsage, duration?: number): void {
     const key = todayKey();
     if (!this.data.daily[key]) {
       this.data.daily[key] = { date: key, models: {} };
@@ -75,6 +74,8 @@ export class StatsStore {
     const mu = ensureModelUsage(this.data.daily[key].models, model);
     mu.inputTokens += usage.inputTokens;
     mu.outputTokens += usage.outputTokens;
+    mu.thinkingTokens += usage.thinkingTokens ?? 0;
+    mu.totalDuration += duration ?? 0;
     mu.requests += 1;
     this.scheduleFlush();
   }
@@ -101,12 +102,14 @@ export class StatsStore {
     }
   }
 
-  recordSessionUsage(sessionId: string, model: string, usage: TokenUsage): void {
+  recordSessionUsage(sessionId: string, model: string, usage: TokenUsage, duration?: number): void {
     const session = this.data.sessions[sessionId];
     if (session) {
       const mu = ensureModelUsage(session.models, model);
       mu.inputTokens += usage.inputTokens;
       mu.outputTokens += usage.outputTokens;
+      mu.thinkingTokens += usage.thinkingTokens ?? 0;
+      mu.totalDuration += duration ?? 0;
       mu.requests += 1;
     }
   }
