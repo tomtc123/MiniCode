@@ -11,7 +11,7 @@ npm run typecheck      # TypeScript type check (no output = success)
 npx tsx test-mock.ts   # Run mock provider tests
 
 # Build single executable (requires Bun)
-~/.bun/bin/bun build --compile src/index.tsx --outfile minicode.exe
+npm run build:bun
 ```
 
 ## Architecture

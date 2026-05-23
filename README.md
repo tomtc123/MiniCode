@@ -12,7 +12,7 @@ A minimal, experimental Claude Code-like CLI tool built with TypeScript and Ink.
 - Built-in tools: file read/write, shell commands
 - Slash commands: `/help`, `/clear`, `/tools`, `/provider`, `/exit`
 - Mock mode for testing without API keys
-- Single executable compilation via Bun
+- Single executable compilation via Bun (with custom icon and version info)
 
 ## Quick Start
 
@@ -99,32 +99,26 @@ Type `/` to open the command menu:
 
 ## Build Single Executable
 
-### Using Bun (Recommended)
-
 ```bash
-# Install Bun
+# Install Bun (if not installed)
 # Windows: powershell -c "irm bun.sh/install.ps1 | iex"
 # Mac/Linux: curl -fsSL https://bun.sh/install | bash
 
-# Install react-devtools-core (required by ink)
-npm install react-devtools-core
+# Build (icon + version info embedded)
+npm run build:bun
 
-# Compile
-bun build --compile src/index.tsx --outfile minicode.exe
+# Or directly
+bun build src/index.tsx --compile --outfile MiniCode.exe \
+  --windows-icon=docs/images/icon.ico \
+  --windows-title="MiniCode" \
+  --windows-product-name="MiniCode" \
+  --windows-description="MiniCode" \
+  --windows-publisher="MiniCode" \
+  --windows-version="1.0.0" \
+  --windows-copyright="Copyright 2026"
 
 # Run
-./minicode.exe
-```
-
-### Using Node.js Wrapper
-
-```bash
-# Windows
-minicode.cmd --help
-
-# Mac/Linux
-chmod +x minicode.sh
-./minicode.sh --help
+./MiniCode.exe
 ```
 
 ## Project Structure

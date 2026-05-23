@@ -5,3 +5,4 @@ dist/
 *.exe
 sea-config.json
 .claude/
+/*.bun-build
