@@ -41,12 +41,10 @@ function pickToolCall(userText: string): { name: string; args: Record<string, un
     return {
       name: "diff",
       args: {
-        // old: "function hello() {\n  console.log('hello');\n}\n",
-        // new: "function hello(name: string) {\n  console.log(`hello, ${name}!`);\n}\n",
-        // labelA: "old.ts",
-        // labelB: "new.ts",
-        "pathA": "hello1.py",
-        "pathB": "hello2.py",
+        old: "function hello() {\n  console.log('hello');\n}\n",
+        new: "function hello(name: string) {\n  console.log(`hello, ${name}!`);\n}\n",
+        labelA: "old.ts",
+        labelB: "new.ts",
       },
     };
   }
