@@ -39,3 +39,7 @@ Environment variables: `MINICODE_PROVIDER`, `MINICODE_API_KEY`, `MINICODE_MODEL`
 ## Tech Stack
 
 TypeScript, Ink v5 (React for terminal), tsx runner (no build step), ESM modules (`"type": "module"` in package.json). The UI uses JSX with `"jsx": "react-jsx"` — no need to import React.
+
+## Model Limitations
+
+- **mimo-v2.5-pro**: Do NOT attempt to read any images (will error). Skip image file reads when using this model.
